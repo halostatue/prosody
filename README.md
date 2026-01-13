@@ -39,12 +39,12 @@ Prosody follows [Semantic Versioning 2.0][semver].
 
 [docs]: https://hexdocs.pm/prosody
 [hexpm]: https://hex.pm/packages/prosody
+[licence]: https://github.com/halostatue/prosody/blob/main/LICENCE.md
+[mdex]: https://hex.pm/packages/mdex
 [posts]: https://hexdocs.pm/tableau/Tableau.PostExtension.html
 [semver]: https://semver.org/
 [shield-coveralls]: https://img.shields.io/coverallsCoverage/github/halostatue/prosody?style=for-the-badge
 [shield-docs]: https://img.shields.io/badge/hex-docs-lightgreen.svg?style=for-the-badge "Hex Docs"
 [shield-hex]: https://img.shields.io/hexpm/v/prosody?style=for-the-badge "Hex Version"
 [shield-licence]: https://img.shields.io/hexpm/l/prosody?style=for-the-badge&label=licence "Apache 2.0"
-[licence]: https://github.com/halostatue/prosody/blob/main/LICENCE.md
 [tableau]: https://hex.pm/packages/tableau
-[mdex]: https://hex.pm/packages/mdex

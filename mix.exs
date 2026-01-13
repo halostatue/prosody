@@ -3,7 +3,7 @@ defmodule Prosody.MixProject do
 
   @app :prosody
   @project_url "https://github.com/halostatue/prosody"
-  @version "1.0.0"
+  @version "1.0.1"
 
   def project do
     [
@@ -30,9 +30,7 @@ defmodule Prosody.MixProject do
   end
 
   def application do
-    [
-      extra_applications: [:logger]
-    ]
+    [extra_applications: [:logger]]
   end
 
   def cli do
@@ -54,7 +52,7 @@ defmodule Prosody.MixProject do
     [
       maintainers: ["Austin Ziegler"],
       licenses: ["Apache-2.0"],
-      files: ~w(lib .formatter.exs mix.exs *.md),
+      files: ~w(lib .formatter.exs mix.exs *.md licences),
       links: %{
         "Source" => @project_url,
         "Issues" => @project_url <> "/issues"
@@ -90,7 +88,7 @@ defmodule Prosody.MixProject do
         ],
         "licences/algorithms-mit.txt": [
           filename: "algorithms-mit.txt",
-          title: "MIT License (for The Algorithms tests)"
+          title: "MIT License (for The Algorithms fixture files)"
         ],
         "licences/dco.txt": [filename: "dco.txt", title: "Developer Certificate of Origin"]
       ],

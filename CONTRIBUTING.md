@@ -53,7 +53,7 @@ output will be rejected.
 > inefficient and non-idiomatic code. This is _not_ something dashed off in a
 > weekend.
 
-### Commit Conventions
+## Commit Conventions
 
 Prosody has adopted a variation of the Conventional Commits format for commit
 messages. The following types are permitted:
