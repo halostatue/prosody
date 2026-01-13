@@ -71,7 +71,7 @@ if Code.ensure_loaded?(Tableau) do
 
     - `prosody.words`: Total reading word count (may include cognitive load adjustments)
     - `prosody.reading_time`: Estimated reading time in minutes (rounded up)
-    - `prosody.code`: `nil` if no code is present in the post, otheriwse contains `words`
+    - `prosody.code`: `nil` if no code is present in the post, otherwise contains `words`
       (code words where cognitive load adjustments may apply) and `lines` (total non-blank
       lines of code)
     - `prosody.text`: `nil` if no text is present in the post, otherwise contains `words`
@@ -100,8 +100,13 @@ if Code.ensure_loaded?(Tableau) do
 
       @impl Prosody.Parser
       def parse(content, opts \\ []) do
-        {site, opts} = Keyword.pop(opts, :site, [])
-        mdex_opts = get_in(site, [:markdown, :mdex]) || []
+        {site, opts} =
+          Keyword.pop_lazy(opts, :site, fn ->
+            {:ok, config} = Tableau.Config.get()
+            config
+          end)
+
+        mdex_opts = site.markdown[:mdex] || []
         ProsodyMDExParser.parse(content, Keyword.merge(mdex_opts, opts))
       end
     end

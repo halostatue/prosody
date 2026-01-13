@@ -111,8 +111,18 @@ defmodule Prosody.TableauTest do
 
   describe "MDExParser" do
     @content "# Test\n\n~~Content~~"
-    @site_blank %{markdown: %{mdex: []}}
-    @site_strikethrough %{markdown: %{mdex: [extension: [strikethrough: true]]}}
+
+    {:ok, config} = Tableau.Config.new(%{url: "http://localhost/"})
+
+    @site_blank config
+
+    {:ok, config} =
+      Tableau.Config.new(%{
+        url: "http://localhost/",
+        markdown: [mdex: [extension: [strikethrough: true]]]
+      })
+
+    @site_strikethrough config
 
     test "parses markdown content" do
       assert {:ok, [%{content: "Test"}, %{content: "~~Content~~"}]} = Extension.MDExParser.parse(@content)
@@ -138,7 +148,7 @@ defmodule Prosody.TableauTest do
 
   defp build_post(file, body, opts \\ []) do
     {frontmatter, opts} = Keyword.pop(opts, :frontmatter)
-    {site, opts} = Keyword.pop(opts, :site, %{})
+    {site, opts} = Keyword.pop(opts, :site, %Tableau.Config{})
 
     post =
       %{file: file, body: body}
