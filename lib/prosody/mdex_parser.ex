@@ -21,9 +21,7 @@ if Code.ensure_loaded?(MDEx) do
     Options are ignored when the content is provided as `t:MDEx.Document.t/0`.
 
     - `:strip_frontmatter` (default: `true`): Whether to strip YAML frontmatter.
-    - `:plugins` (default: `[]`): Optional List of MDEx plugin modules to attach to the
-      processing pipeline. Used with MDEx 0.10 or higher.
-    - Other options are passed to MDEx for parsing configuration
+    - Other options are passed to MDEx for parsing configuration, including `:plugins`.
 
     ## Examples
 
@@ -53,12 +51,10 @@ if Code.ensure_loaded?(MDEx) do
       {strip?, opts} = Keyword.pop(opts, :strip_frontmatter, true)
       content = if strip?, do: Parser.strip_frontmatter(content), else: content
       {language, opts} = Keyword.pop(opts, :language)
-      {plugins, opts} = Keyword.pop(opts, :plugins, [])
 
       opts
       |> Keyword.put(:markdown, content)
       |> MDEx.new()
-      |> attach_plugins(plugins)
       |> MDEx.Document.run()
       |> parse(language: language)
     end
@@ -79,9 +75,7 @@ if Code.ensure_loaded?(MDEx) do
     Options are ignored when the content is provided as `t:MDEx.Document.t/0`.
 
     - `:strip_frontmatter` (default: `true`): Whether to strip YAML frontmatter.
-    - `:plugins` (default: []): Optional List of MDEx plugin modules to attach to the
-      processing pipeline. Used with MDEx 0.10 or higher.
-    - Other options are passed to MDEx for parsing configuration
+    - Other options are passed to MDEx for parsing configuration, including `:plugins`.
 
     ## Examples
 
@@ -154,10 +148,6 @@ if Code.ensure_loaded?(MDEx) do
         [lang | _] when lang != "" -> lang
         _ -> nil
       end
-    end
-
-    defp attach_plugins(mdex, plugins) do
-      Enum.reduce(plugins, mdex, fn mod, mdex -> mod.attach(mdex) end)
     end
   end
 end
