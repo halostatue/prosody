@@ -62,9 +62,9 @@ defmodule Prosody.MixProject do
 
   defp deps do
     [
-      {:mdex, "~> 0.9", optional: true},
+      {:mdex, "~> 0.11 and >= 0.11.1", optional: true},
       {:mdex_gfm, "~> 0.1", optional: true},
-      {:tableau, "~> 0.27", optional: true},
+      {:tableau, "~> 0.30", optional: true},
       {:credo, "~> 1.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.18", only: [:test]},
@@ -90,7 +90,8 @@ defmodule Prosody.MixProject do
           filename: "algorithms-mit.txt",
           title: "MIT License (for The Algorithms fixture files)"
         ],
-        "licences/dco.txt": [filename: "dco.txt", title: "Developer Certificate of Origin"]
+        "licences/dco.txt": [filename: "dco.txt", title: "Developer Certificate of Origin"],
+        "usage-rules.md": [filename: "usage-rules.md", title: "Agent Usage Rules"]
       ],
       source_ref: "v#{@version}",
       source_url: @project_url,
