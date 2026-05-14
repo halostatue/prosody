@@ -50,7 +50,7 @@ defmodule Prosody.MixProject do
 
   defp package do
     [
-      maintainers: ["Austin Ziegler"],
+      maintainers: "Austin Ziegler",
       licenses: ["Apache-2.0"],
       files: ~w(lib .formatter.exs mix.exs *.md licences),
       links: %{
@@ -67,9 +67,11 @@ defmodule Prosody.MixProject do
       {:tableau, "~> 0.30", optional: true},
       {:credo, "~> 1.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.18", only: [:test]},
       {:ex_doc, "~> 0.29", only: [:dev, :test], runtime: false},
-      {:quokka, "~> 2.6", only: [:dev, :test], runtime: false}
+      {:excoveralls, "~> 0.18", only: [:test]},
+      {:mix_audit, "~> 2.1", only: [:dev, :test]},
+      {:quokka, "~> 2.6", only: [:dev, :test], runtime: false},
+      {:sobelow, "~> 0.14", only: [:dev, :test]}
     ]
   end
 
@@ -78,20 +80,17 @@ defmodule Prosody.MixProject do
       main: "Prosody",
       extras: [
         "README.md",
-        "CONTRIBUTING.md": [filename: "CONTRIBUTING.md", title: "Contributing"],
-        "CODE_OF_CONDUCT.md": [filename: "CODE_OF_CONDUCT.md", title: "Code of Conduct"],
-        "CHANGELOG.md": [filename: "CHANGELOG.md", title: "CHANGELOG"],
-        "LICENCE.md": [filename: "LICENCE.md", title: "Licence"],
-        "licences/APACHE-2.0.txt": [
-          filename: "APACHE-2.0.txt",
-          title: "Apache License, version 2.0"
-        ],
+        "CONTRIBUTING.md": [filename: "CONTRIBUTING", title: "Contributing"],
+        "CODE_OF_CONDUCT.md": [filename: "CODE_OF_CONDUCT", title: "Code of Conduct"],
+        "CHANGELOG.md": [filename: "CHANGELOG", title: "CHANGELOG"],
+        "LICENCE.md": [filename: "LICENCE", title: "Licence"],
+        "licences/APACHE-2.0.txt": [filename: "APACHE-2.0", title: "Apache License, version 2.0"],
         "licences/algorithms-mit.txt": [
-          filename: "algorithms-mit.txt",
+          filename: "algorithms-mit",
           title: "MIT License (for The Algorithms fixture files)"
         ],
-        "licences/dco.txt": [filename: "dco.txt", title: "Developer Certificate of Origin"],
-        "usage-rules.md": [filename: "usage-rules.md", title: "Agent Usage Rules"]
+        "licences/dco.txt": [filename: "dco", title: "Developer Certificate of Origin"],
+        "usage-rules.md": [filename: "usage-rules", title: "Agent Usage Rules"]
       ],
       source_ref: "v#{@version}",
       source_url: @project_url,
