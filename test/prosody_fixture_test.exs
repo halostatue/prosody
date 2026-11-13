@@ -39,7 +39,7 @@ defmodule Prosody.FixtureTests do
     },
     "elixir" => %{
       file: "bubble_sort.ex",
-      expected: %{code: %{lines: 393, words: 644}, reading_time: 4, text: nil, words: 644}
+      expected: %{code: %{lines: 391, words: 642}, reading_time: 4, text: nil, words: 642}
     },
     "python" => %{
       file: "bubble_sort.py",

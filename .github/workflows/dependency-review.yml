@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           disable-sudo: true
           egress-policy: block
@@ -44,12 +44,12 @@ jobs:
             tuf-repo-cdn.sigstore.dev:443
             tuf-repo.github.com:443
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Submit dependencies
-        uses: erlef/mix-dependency-submission@c4a36104ac7614b1b66d0da6e8a1c7d6d07bc52b # v1.3.2
+        uses: erlef/mix-dependency-submission@c5bd30a0e18822272a914adb7fb153866d491baf # v1.3.5
 
       - name: Dependency Review
         if: ${{ github.event_name == 'pull_request' }}

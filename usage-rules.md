@@ -1,8 +1,8 @@
 # Prosody Usage Rules
 
-Prosody analyzes reading flow and cognitive load for mixed text and code content
-as found in technical blogs. Provides extensible content analysis with built-in
-support for Markdown and Tableau integration.
+Prosody analyzes reading flow and cognitive load for mixed text and code
+content as found in technical blogs. Provides extensible content analysis with
+built-in support for Markdown and Tableau integration.
 
 ## Core Principles
 
@@ -33,24 +33,29 @@ Configuration options:
 
 - `:enabled` (default `false`) - Enable/disable the extension
 - `:parsers` (default `:default`) - Parser configuration by file extension
-  - `:default` alone or in list adds Markdown (MDEx) and text fallback
-  - Keyword list like `[md: Prosody.MDExParser, dj: MyParser]`
-  - Use `default: MyParser` for unmatched extensions
+  - `:default` alone or in list adds Markdown handling with
+    `Prosody.Tableau.MDExParser` (which reads MDEx configuration from Tableau)
+    and a `Prosody.TextParser` fallback for unmatched extensions
+  - Keyword list like `[md: Prosody.Tableau.MDExParser, dj: MyDjotParser]`
+  - Parsers may be `module` or `{module, opts}`
+  - Use `default: MyParser` for unmatched extensions; without a `:default`
+    entry, unmatched content is skipped
 - `:analyzers` - List of analyzer modules (default
   `[Prosody.CodeAnalyzer, Prosody.TextAnalyzer]`)
 - `:words_per_minute` (default `200`) - Reading speed for time estimation
 - `:min_reading_time` (default `1`) - Minimum reading time in minutes
-- `:algorithm` - Text analysis algorithm (`:balanced`, `:minimal`, `:maximal`)
-- `:skip_punctuation_words`, `:preserve_urls`, `:preserve_emails`,
-  `:preserve_numbers` - Text analyzer options
+- `:algorithm`, `:skip_punctuation_words`, `:preserve_urls`,
+  `:preserve_emails`, `:preserve_numbers`, `:word_separators` - Passed to
+  `Prosody.TextAnalyzer` (see [Text Analyzer](#text-analyzer))
 
 ### 2. Programmatic API
 
 For custom integrations or standalone analysis.
 
 ```elixir
-# Parse content
-{:ok, blocks} = Prosody.parse(content, parser: Prosody.MDExParser)
+# Parse content (parser defaults to :text)
+{:ok, blocks} = Prosody.parse(content, parser: :markdown)
+{:ok, blocks} = Prosody.parse(content, parser: {:markdown, strip_frontmatter: false})
 
 # Analyze blocks
 {:ok, analysis} = Prosody.analyze_blocks(blocks)
@@ -59,7 +64,7 @@ For custom integrations or standalone analysis.
 {:ok, summary} = Prosody.summarize(analysis, words_per_minute: 200)
 
 # Or do it all at once
-{:ok, summary} = Prosody.analyze(content, parser: Prosody.MDExParser)
+{:ok, summary} = Prosody.analyze(content, parser: :markdown)
 
 # Access metrics
 summary.reading_time  # minutes
@@ -80,7 +85,11 @@ defmodule MyApp.CustomParser do
   @impl true
   def parse(content, _opts) do
     # Return {:ok, [blocks]} or {:error, reason}
-    # Each block: %{content: string, language: nil | string, metadata: map}
+    # Each block is a map with keys:
+    #   type: :text | :code
+    #   content: string
+    #   language: nil | string
+    #   metadata: map
   end
 end
 
@@ -92,11 +101,16 @@ end
 
 ### Choose Your Parser
 
-**Use `Prosody.MDExParser` when:**
+**Use `Prosody.MDExParser` (`:markdown`) when:**
 
 - Content is Markdown
 - MDEx is available in dependencies
 - You want fast, CommonMark-compliant parsing
+
+**Use `Prosody.Tableau.MDExParser` when:**
+
+- Configuring Markdown parsing for the Tableau extension
+- MDEx options should match the Tableau site configuration
 
 **Use `Prosody.TextParser` when:**
 
@@ -173,8 +187,8 @@ config :tableau, Prosody.Tableau,
 ```elixir
 defmodule MyApp.ContentAnalyzer do
   def analyze_post(content) do
-    Prosody.analyze(content, 
-      parser: Prosody.MDExParser,
+    Prosody.analyze(content,
+      parser: :markdown,
       words_per_minute: 200
     )
   end
@@ -227,18 +241,24 @@ Analyzes prose content with configurable word counting strategies.
 
 Configuration options:
 
-- `:algorithm` - Word counting strategy (`:balanced`, `:minimal`, `:maximal`)
+- `:algorithm` - Word counting strategy: `:balanced` (default), `:minimal`,
+  `:maximal`
 - `:skip_punctuation_words` - Exclude punctuation-only words
 - `:preserve_urls` - Keep URLs as single tokens
 - `:preserve_emails` - Keep emails as single tokens
 - `:preserve_numbers` - Keep numbers as single tokens
-- `:word_separators` - Custom regex or list for splitting
+- `:word_separators` - Custom regex or list for splitting; cannot be combined
+  with `:algorithm`
 
-Algorithms:
+Each algorithm sets its own defaults for the other options, which may be
+overridden individually (e.g., `algorithm: :maximal, preserve_urls: true`):
 
-- `:balanced` (default) - Preserves URLs, emails, numbers; skips punctuation
-- `:minimal` - Aggressive filtering, only meaningful words
-- `:maximal` - Preserves everything, minimal filtering
+- `:balanced` (default) - Splits on whitespace, `-`, and `/`; preserves URLs,
+  emails, and numbers; skips punctuation-only words
+- `:minimal` - Splits on whitespace only; preserves URLs, emails, and numbers;
+  skips punctuation-only words
+- `:maximal` - Splits on whitespace and punctuation; does not preserve URLs,
+  emails, or numbers; skips punctuation-only words
 
 ## Tableau Integration Details
 
@@ -304,17 +324,19 @@ defmodule MyApp.CustomAnalyzer do
 
   @impl true
   def analyze(block, opts) do
-    # Return analysis map or :ignore
-    %{
-      words: count_words(block.content),
-      reading_words: estimate_reading_words(block.content),
-      metadata: %{type: :custom}
-    }
+    # Return {:ok, analysis}, :ignore, or {:error, reason}
+    {:ok,
+     %{
+       words: count_words(block.content),
+       reading_words: estimate_reading_words(block.content),
+       metadata: %{type: :custom}
+     }}
   end
 end
 
 # Use in configuration
-config :prosody, :tableau,
+config :tableau, Prosody.Tableau,
+  enabled: true,
   analyzers: [
     Prosody.CodeAnalyzer,
     Prosody.TextAnalyzer,
@@ -324,40 +346,28 @@ config :prosody, :tableau,
 
 Analyzer contract:
 
+- Analyzers are tried in order until one returns something other than
+  `:ignore`
 - Return `:ignore` to skip the block
-- Return map with `:words`, `:reading_words`, `:metadata` keys
+- Return `{:ok, map}` with `:words`, `:reading_words`, `:metadata` keys
 - Optional `:lines` key for line count
 - Metadata should include `:type` for categorization
 
 ## Configuration Options
 
-### Tableau Extension
-
-- `:enabled` (default `true`) - Enable/disable analysis
-- `:parsers` - Parser configuration by file extension (default
-  `[md: Prosody.MDExParser]`)
-- `:analyzers` - List of analyzer modules (default
-  `[Prosody.CodeAnalyzer, Prosody.TextAnalyzer]`)
-- `:words_per_minute` (default `200`) - Reading speed
-- `:min_reading_time` (default `1`) - Minimum reading time in minutes
+Tableau extension options are listed under
+[Tableau Extension](#1-tableau-extension) and text analyzer options under
+[Text Analyzer](#text-analyzer).
 
 ### Parser Options
 
 Passed to `Prosody.parse/2`:
 
-- `:parser` - Parser module (required)
+- `:parser` (default `:text`) - `:markdown`, `:text`, a parser module, or
+  `{parser, opts}`
 - `:strip_frontmatter` - Remove YAML frontmatter (default varies by parser)
-- Additional options depend on parser implementation
-
-### Text Analyzer Options
-
-- `:algorithm` - Word counting strategy: `:balanced` (default), `:minimal`,
-  `:maximal`
-- `:skip_punctuation_words` - Exclude punctuation-only words (default `false`)
-- `:preserve_urls` - Keep URLs as single tokens (default `false`)
-- `:preserve_emails` - Keep emails as single tokens (default `false`)
-- `:preserve_numbers` - Keep numbers as single tokens (default `false`)
-- `:word_separators` - Custom regex or list for splitting words
+- Additional options depend on parser implementation; when the parser is given
+  as `{parser, opts}`, only those `opts` are passed to it
 
 ### Summarize Options
 
@@ -366,8 +376,8 @@ Passed to `Prosody.parse/2`:
 
 ## Common Gotchas
 
-1. **MDEx dependency** - `Prosody.MDExParser` requires MDEx in dependencies and
-   is only available when MDEx is present.
+1. **MDEx dependency** - `Prosody.MDExParser` requires MDEx in dependencies
+   and is only available when MDEx is present.
 
 2. **Tableau dependency** - `Prosody.Tableau` requires Tableau in dependencies
    and is only available when Tableau is present.
@@ -381,10 +391,15 @@ Passed to `Prosody.parse/2`:
 5. **Block-level analysis** - Analyzers work on individual blocks (paragraphs,
    code blocks), not entire documents. Summarization aggregates results.
 
-6. **Parser file extension mapping** - Tableau extension uses file extension to
-   select parser. Configure `:parsers` option with extension keys.
+6. **Parser file extension mapping** - Tableau extension uses file extension
+   to select parser. Configure `:parsers` option with extension keys.
 
-7. **Frontmatter conflicts** - If post already has `:prosody` key in
+7. **Markdown parser in Tableau** - When configuring Markdown explicitly in
+   `:parsers`, use `Prosody.Tableau.MDExParser`, not `Prosody.MDExParser`. The
+   plain parser does not read MDEx configuration from Tableau, so enabled
+   extensions (e.g., strikethrough) may not match how the site renders posts.
+
+8. **Frontmatter conflicts** - If post already has `:prosody` key in
    frontmatter, it will be overwritten unless set to `false` to disable
    analysis.
 

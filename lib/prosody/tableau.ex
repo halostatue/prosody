@@ -26,11 +26,11 @@ if Code.ensure_loaded?(Tableau) do
       posts that do not match the expected configuration. Parsers may be specified as
       `t:module/0` or `{module, opts}`.
 
-      The special value `:default` (either alone or in the parsers list) adds Markdown
-      handling with Prosody.Tableau.MDExParser (a version of `Prosody.MDExParser` that
-      knows how to read configuration from the Tableau MDEx configuration at
-      `token.site.config.markdown.mdex`) and a fallback to `Prosody.TextParser` for any
-      unknown content type.
+      The special value `:default` (either alone or in the parsers list) sets:
+
+      - `md: Prosody.Tableau.MDExParser`, a version of `Prosody.MDExParser` that
+        reads the MDEx configuration from Tableau, and
+      - `default: Prosody.TextParser` for unknown content types treated as text.
 
       If no parser is configured as `default: module`, then content not matching any
       configured type will be skipped.
@@ -50,7 +50,7 @@ if Code.ensure_loaded?(Tableau) do
     - Summary configuration options:
 
       - `:words_per_minute` (default: 200): Reading speed for time estimation
-      - `:min_reading_time` (default: 2): Minimum reading time to display
+      - `:min_reading_time` (default: 1): Minimum reading time to display
 
     ## Post Metadata Added
 
@@ -100,14 +100,34 @@ if Code.ensure_loaded?(Tableau) do
 
       @impl Prosody.Parser
       def parse(content, opts \\ []) do
-        {site, opts} =
-          Keyword.pop_lazy(opts, :site, fn ->
-            {:ok, config} = Tableau.Config.get()
-            config
-          end)
+        {site, opts} = Keyword.pop(opts, :site)
+        ProsodyMDExParser.parse(content, Keyword.merge(mdex_opts(site), opts))
+      end
 
-        mdex_opts = site.markdown[:mdex] || []
-        ProsodyMDExParser.parse(content, Keyword.merge(mdex_opts, opts))
+      defp site_config do
+        case Tableau.Config.get() do
+          {:ok, config} -> config
+          _ -> %{}
+        end
+      end
+
+      defp mdex_opts(site) do
+        # elixir-tools/tableau#193 changes Tableau from having a Converter behaviour to
+        # using a converter extension (`Tableau.MDExExtension`). This checks for the
+        # configuration there, otherwise it tries to get the configuration from the
+        # location _before_ the change.
+        #
+        # In the unlikely event that _both_ exist, the newer configuration option take
+        # precedence.
+        modern = Application.get_env(:tableau, Tableau.MDExExtension, [])
+
+        legacy =
+          case Map.fetch(site || site_config(), :markdown) do
+            {:ok, markdown} -> markdown[:mdex] || []
+            :error -> []
+          end
+
+        Keyword.merge(legacy, modern)
       end
     end
 
@@ -148,15 +168,12 @@ if Code.ensure_loaded?(Tableau) do
     end
 
     defp analyze_post(post, config, site_config) do
-      if parser = Map.get(config.parsers, Path.extname(post.file), Map.get(config.parsers, :default)) do
-        run_prosody_pipeline(
-          post,
-          parser,
-          Keyword.put(config.parser_opts[parser], :site, site_config),
-          config
-        )
-      else
-        {:ok, nil}
+      case Map.get(config.parsers, Path.extname(post.file), Map.get(config.parsers, :default)) do
+        {parser, parser_opts} ->
+          run_prosody_pipeline(post, parser, Keyword.put(parser_opts, :site, site_config), config)
+
+        nil ->
+          {:ok, nil}
       end
     end
 
@@ -170,7 +187,7 @@ if Code.ensure_loaded?(Tableau) do
     defp validate_and_prepare(config) do
       case Enum.reduce_while(
              config,
-             %{analysis_opts: [], enabled: false, parser_opts: %{}, parsers: %{}, summarize_opts: []},
+             %{analysis_opts: [], enabled: false, parsers: %{}, summarize_opts: []},
              &prepare_option/2
            ) do
         {:error, reason} -> {:error, reason}
@@ -210,30 +227,20 @@ if Code.ensure_loaded?(Tableau) do
           requested
         end
 
-      {parsers, parser_opts} = Enum.reduce(parsers, {%{}, %{}}, &prepare_parser/2)
-
-      {:cont, %{config | parsers: parsers, parser_opts: parser_opts}}
+      {:cont, %{config | parsers: Enum.reduce(parsers, %{}, &prepare_parser/2)}}
     end
 
     @default_parser_opts [strip_frontmatter: false]
 
-    defp prepare_parser({key, {parser, opts}}, {parsers, parser_opts}) do
-      key = if key == :default, do: :default, else: ".#{key}"
+    # Parser options are stored with the parser for each extension key so that the same
+    # parser module may be configured differently for different extensions.
+    defp prepare_parser({key, {parser, opts}}, parsers),
+      do: Map.put(parsers, parser_key(key), {parser, Keyword.merge(@default_parser_opts, opts)})
 
-      {
-        Map.put(parsers, key, parser),
-        Map.put(parser_opts, parser, Keyword.merge(@default_parser_opts, opts))
-      }
-    end
+    defp prepare_parser({key, parser}, parsers), do: Map.put(parsers, parser_key(key), {parser, @default_parser_opts})
 
-    defp prepare_parser({key, parser}, {parsers, parser_opts}) do
-      key = if key == :default, do: :default, else: ".#{key}"
-
-      {
-        Map.put(parsers, key, parser),
-        Map.put(parser_opts, parser, @default_parser_opts)
-      }
-    end
+    defp parser_key(:default), do: :default
+    defp parser_key(key), do: ".#{key}"
 
     defp validate(config) do
       with {:ok, config} <- validate_analysis_opts(config) do

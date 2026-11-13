@@ -2,7 +2,7 @@
 
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-`Prosody` is copyright 2025 Austin Ziegler and is licensed under the
+Prosody is copyright 2025-2026 Austin Ziegler and is licensed under the
 [Apache License, version 2.0](licences/APACHE-2.0.txt).
 
 - SPDX Licence: [Apache-2.0][apache-2]
@@ -10,13 +10,16 @@
 ## Developer Certificate of Origin
 
 All contributors **must** certify they are willing and able to provide their
-contributions under the terms of this project's licences with the certification
-of the [Developer Certificate of Origin (Version 1.1)](licences/dco.txt).
+contributions under the terms of this project's licences with the
+certification of the
+[Developer Certificate of Origin (Version 1.1)](licences/dco.txt).
 
 Such certification is provided by ensuring that a `Signed-off-by`
 [commit trailer][trailer] is present on every commit:
 
-    Signed-off-by: FirstName LastName <email@example.org>
+```text
+Signed-off-by: FirstName LastName <email@example.org>
+```
 
 The `Signed-off-by` trailer can be automatically added by git with the `-s` or
 `--signoff` option on `git commit`:
@@ -53,7 +56,6 @@ from various repositories under [TheAlgorithms][alg] have been included under
 [alg]: https://github.com/TheAlgorithms
 [apache-2]: https://spdx.org/licenses/Apache-2.0.html
 [cpp]: https://github.com/TheAlgorithms/C-Plus-Plus/blob/master/sorting/bubble_sort.cpp
-[elixir]: https://github.com/elixir-lang/elixir
 [ex]: https://github.com/TheAlgorithms/Elixir/blob/master/lib/sorting/bubble_sort.ex
 [go]: https://github.com/TheAlgorithms/Go/blob/master/sort/bubblesort.go
 [py]: https://github.com/TheAlgorithms/Python/blob/master/sorts/bubble_sort.py
