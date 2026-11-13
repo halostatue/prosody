@@ -72,7 +72,7 @@ jobs:
 
       - run: mix 'do' deps.get, deps.compile
 
-      - run: mix deps.audit
+      - run: mix hex.audit
         if: matrix.quality
 
       - run: mix sobelow --config
