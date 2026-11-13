@@ -3,7 +3,7 @@ defmodule Prosody.MixProject do
 
   @app :prosody
   @project_url "https://github.com/halostatue/prosody"
-  @version "1.1.0"
+  @version "1.2.0"
 
   def project do
     [
