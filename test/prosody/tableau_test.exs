@@ -116,19 +116,15 @@ defmodule Prosody.TableauTest do
 
     @site_blank config
 
-    {:ok, config} =
-      Tableau.Config.new(%{
-        url: "http://localhost/",
-        markdown: [mdex: [extension: [strikethrough: true]]]
-      })
-
-    @site_strikethrough config
+    # Tableau versions without TableauMDExExtension has a different config shape and this
+    # remains compatible (for now).
+    @site_strikethrough %{markdown: [mdex: [extension: [strikethrough: true]]]}
 
     test "parses markdown content" do
       assert {:ok, [%{content: "Test"}, %{content: "~~Content~~"}]} = Extension.MDExParser.parse(@content)
     end
 
-    test "uses site config when provided" do
+    test "uses legacy site markdown config when provided" do
       assert {:ok, [%{content: "Test"}, %{content: "Content"}]} =
                Extension.MDExParser.parse(@content, site: @site_strikethrough)
 

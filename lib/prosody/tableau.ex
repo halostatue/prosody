@@ -27,10 +27,9 @@ if Code.ensure_loaded?(Tableau) do
       `t:module/0` or `{module, opts}`.
 
       The special value `:default` (either alone or in the parsers list) adds Markdown
-      handling with Prosody.Tableau.MDExParser (a version of `Prosody.MDExParser` that
-      knows how to read configuration from the Tableau MDEx configuration at
-      `token.site.config.markdown.mdex`) and a fallback to `Prosody.TextParser` for any
-      unknown content type.
+      handling with Prosody.Tableau.MDExParser, a version of `Prosody.MDExParser` that
+      reads the MDEx configuration from Tableau and falls back to `Prosody.TextParser` for
+      any unknown content type.
 
       If no parser is configured as `default: module`, then content not matching any
       configured type will be skipped.
@@ -100,14 +99,34 @@ if Code.ensure_loaded?(Tableau) do
 
       @impl Prosody.Parser
       def parse(content, opts \\ []) do
-        {site, opts} =
-          Keyword.pop_lazy(opts, :site, fn ->
-            {:ok, config} = Tableau.Config.get()
-            config
-          end)
+        {site, opts} = Keyword.pop(opts, :site)
+        ProsodyMDExParser.parse(content, Keyword.merge(mdex_opts(site), opts))
+      end
 
-        mdex_opts = site.markdown[:mdex] || []
-        ProsodyMDExParser.parse(content, Keyword.merge(mdex_opts, opts))
+      defp site_config do
+        case Tableau.Config.get() do
+          {:ok, config} -> config
+          _ -> %{}
+        end
+      end
+
+      defp mdex_opts(site) do
+        # elixir-tools/tableau#193 changes Tableau from having a Converter behaviour to
+        # using a converter extension (`Tableau.MDExExtension`). This checks for the
+        # configuration there, otherwise it tries to get the configuration from the
+        # location _before_ the change.
+        #
+        # In the unlikely event that _both_ exist, the newer configuration option take
+        # precedence.
+        modern = Application.get_env(:tableau, Tableau.MDExExtension, [])
+
+        legacy =
+          case Map.fetch(site || site_config(), :markdown) do
+            {:ok, markdown} -> markdown[:mdex] || []
+            :error -> []
+          end
+
+        Keyword.merge(legacy, modern)
       end
     end
 
