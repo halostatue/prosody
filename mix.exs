@@ -1,13 +1,12 @@
 defmodule Prosody.MixProject do
   use Mix.Project
 
-  @app :prosody
   @project_url "https://github.com/halostatue/prosody"
-  @version "1.1.0"
+  @version "1.2.0"
 
   def project do
     [
-      app: @app,
+      app: :prosody,
       description:
         "Content analysis library for measuring reading flow and cognitive load in mixed text and code content",
       version: @version,
@@ -81,7 +80,7 @@ defmodule Prosody.MixProject do
 
   defp docs do
     [
-      main: "Prosody",
+      main: "readme",
       extras: [
         "README.md",
         "CONTRIBUTING.md": [filename: "CONTRIBUTING", title: "Contributing"],
@@ -98,7 +97,7 @@ defmodule Prosody.MixProject do
       ],
       source_ref: "v#{@version}",
       source_url: @project_url,
-      canonical: "https://hexdocs.pm/#{@app}"
+      canonical: "https://prosody.hexdocs.pm/"
     ]
   end
 
