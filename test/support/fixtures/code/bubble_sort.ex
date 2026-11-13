@@ -39,7 +39,6 @@ defmodule Algorithms.Sorting.BubbleSort do
    [2, 1, 5, 4, 3] => [1, 2, 3, 4, 5]
   Complexity: O(n*n)
   """
-  require Integer
 
   @doc """
     take a List and return the List with the numbers ordered
