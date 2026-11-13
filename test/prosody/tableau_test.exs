@@ -9,10 +9,27 @@ defmodule Prosody.TableauTest do
     def parse(_, _), do: {:error, "parse failed"}
   end
 
+  # Reports the options it received (minus :site) as a parse error so tests can see them.
+  defmodule OptsEchoParser do
+    @moduledoc false
+    def parse(_, opts),
+      do:
+        {:error,
+         opts
+         |> Keyword.drop([:site, :strip_frontmatter])
+         |> inspect()}
+  end
+
   describe "config/1" do
     test "basic configuration works" do
-      assert {:ok, %{enabled: true, parsers: %{".md" => Extension.MDExParser, :default => Prosody.TextParser}}} =
-               Extension.config(%{enabled: true})
+      assert {:ok,
+              %{
+                enabled: true,
+                parsers: %{
+                  ".md" => {Extension.MDExParser, [strip_frontmatter: false]},
+                  :default => {Prosody.TextParser, [strip_frontmatter: false]}
+                }
+              }} = Extension.config(%{enabled: true})
     end
 
     test "rejects unknown options" do
@@ -66,13 +83,38 @@ defmodule Prosody.TableauTest do
     test "handles custom parsers" do
       assert {:ok,
               %{
-                parsers: %{".txt" => CustomParser, ".json" => AnotherParser},
-                parser_opts: %{
-                  CustomParser => [strip_frontmatter: false, custom_opt: true],
-                  AnotherParser => [strip_frontmatter: false]
+                parsers: %{
+                  ".txt" => {CustomParser, [strip_frontmatter: false, custom_opt: true]},
+                  ".json" => {AnotherParser, [strip_frontmatter: false]}
                 }
               }} =
                Extension.config(%{parsers: [txt: {CustomParser, custom_opt: true}, json: AnotherParser]})
+    end
+
+    test "keeps separate options when one parser handles multiple extensions" do
+      assert {:ok,
+              %{
+                parsers: %{
+                  ".md" => {CustomParser, [strip_frontmatter: false, a: 1]},
+                  ".markdown" => {CustomParser, [strip_frontmatter: false, b: 2]}
+                }
+              }} =
+               Extension.config(%{parsers: [md: {CustomParser, a: 1}, markdown: {CustomParser, b: 2}]})
+
+      assert {:ok,
+              %{
+                parsers: %{
+                  ".md" => {CustomParser, [strip_frontmatter: false, a: 1]},
+                  ".markdown" => {CustomParser, [strip_frontmatter: false]}
+                }
+              }} = Extension.config(%{parsers: [md: {CustomParser, a: 1}, markdown: CustomParser]})
+    end
+
+    test "does not double the leading dot of string extension keys" do
+      assert {:ok, %{parsers: %{".md" => {CustomParser, [strip_frontmatter: false]}} = parsers}} =
+               Extension.config(%{parsers: [{".md", CustomParser}]})
+
+      refute Map.has_key?(parsers, "..md")
     end
 
     test "handles analyzers option with validation" do
@@ -107,6 +149,44 @@ defmodule Prosody.TableauTest do
       {_post, token} = build_post("test.md", "Content", parsers: [md: FailingParser])
       assert {:ok, %{posts: [%{prosody: %{error: "parse failed"}}]}} = Extension.pre_build(token)
     end
+
+    test "selects the parser from the atom :ext when present" do
+      # The file name has no matching parser, so only :ext can select FailingParser.
+      {_post, token} = build_post("test.txt", "Content", ext: :md, parsers: [md: FailingParser])
+      assert {:ok, %{posts: [%{prosody: %{error: "parse failed"}}]}} = Extension.pre_build(token)
+    end
+
+    test "selects the parser from a string :ext with a leading dot" do
+      {_post, token} = build_post("test.txt", "Content", ext: ".md", parsers: [md: FailingParser])
+      assert {:ok, %{posts: [%{prosody: %{error: "parse failed"}}]}} = Extension.pre_build(token)
+    end
+
+    test ":ext takes precedence over the file extension" do
+      parsers = [md: {OptsEchoParser, a: 1}, markdown: {OptsEchoParser, b: 2}]
+
+      {_post, token} = build_post("test.markdown", "Content", ext: :md, parsers: parsers)
+      assert {:ok, %{posts: [%{prosody: %{error: "[a: 1]"}}]}} = Extension.pre_build(token)
+    end
+
+    test "falls back to the default parser when :ext has no match" do
+      {%{body: body}, token} = build_post("test.md", "Content", ext: :unknown)
+      assert {:ok, %{posts: [%{body: ^body, prosody: %{reading_time: _}}]}} = Extension.pre_build(token)
+    end
+
+    test "skips posts with an unmatched :ext and no default parser" do
+      {post, token} = build_post("test.md", "Content", ext: :unknown, parsers: [txt: FailingParser])
+      assert {:ok, %{posts: [^post]}} = Extension.pre_build(token)
+    end
+
+    test "passes per-extension options when one parser handles multiple extensions" do
+      parsers = [md: {OptsEchoParser, a: 1}, markdown: {OptsEchoParser, b: 2}]
+
+      {_post, token} = build_post("test.md", "Content", parsers: parsers)
+      assert {:ok, %{posts: [%{prosody: %{error: "[a: 1]"}}]}} = Extension.pre_build(token)
+
+      {_post, token} = build_post("test.markdown", "Content", parsers: parsers)
+      assert {:ok, %{posts: [%{prosody: %{error: "[b: 2]"}}]}} = Extension.pre_build(token)
+    end
   end
 
   describe "MDExParser" do
@@ -116,19 +196,15 @@ defmodule Prosody.TableauTest do
 
     @site_blank config
 
-    {:ok, config} =
-      Tableau.Config.new(%{
-        url: "http://localhost/",
-        markdown: [mdex: [extension: [strikethrough: true]]]
-      })
-
-    @site_strikethrough config
+    # Tableau versions without TableauMDExExtension has a different config shape and this
+    # remains compatible (for now).
+    @site_strikethrough %{markdown: [mdex: [extension: [strikethrough: true]]]}
 
     test "parses markdown content" do
       assert {:ok, [%{content: "Test"}, %{content: "~~Content~~"}]} = Extension.MDExParser.parse(@content)
     end
 
-    test "uses site config when provided" do
+    test "uses legacy site markdown config when provided" do
       assert {:ok, [%{content: "Test"}, %{content: "Content"}]} =
                Extension.MDExParser.parse(@content, site: @site_strikethrough)
 
@@ -149,10 +225,12 @@ defmodule Prosody.TableauTest do
   defp build_post(file, body, opts \\ []) do
     {frontmatter, opts} = Keyword.pop(opts, :frontmatter)
     {site, opts} = Keyword.pop(opts, :site, %Tableau.Config{})
+    {ext, opts} = Keyword.pop(opts, :ext)
 
     post =
       %{file: file, body: body}
       |> then(&if frontmatter, do: Map.merge(&1, frontmatter), else: &1)
+      |> then(&if ext, do: Map.put(&1, :ext, ext), else: &1)
       |> then(&if file, do: &1, else: Map.delete(&1, :file))
 
     case Extension.config(opts) do
