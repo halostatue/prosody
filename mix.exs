@@ -65,13 +65,15 @@ defmodule Prosody.MixProject do
       {:mdex, "~> 0.11 and >= 0.11.1", optional: true},
       {:mdex_gfm, "~> 0.1", optional: true},
       {:tableau, "~> 0.30", optional: true},
+      {:castore, "~> 1.0", only: [:test]},
       {:credo, "~> 1.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.29", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.18", only: [:test]},
       {:mix_audit, "~> 2.1", only: [:dev, :test]},
       {:quokka, "~> 2.6", only: [:dev, :test], runtime: false},
-      {:sobelow, "~> 0.14", only: [:dev, :test]}
+      {:sobelow, "~> 0.14", only: [:dev, :test]},
+      {:usage_rules, "~> 1.3", only: [:dev, :test]}
     ]
   end
 
