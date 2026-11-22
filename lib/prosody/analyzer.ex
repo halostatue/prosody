@@ -1,46 +1,53 @@
 defmodule Prosody.Analyzer do
-  @moduledoc """
+  @moduledoc ~S"""
   Behaviour for modules that analyze content blocks and return word counts, cognitive load
   adjustments, and other metrics as appropriate to the type of content block.
 
   Content blocks are `t:Prosody.block/0` produced by `Prosody.Parser` modules.
   """
 
-  @doc """
-  Analyze a single content block.
+  @doc ~S"""
+  Analyze a content block.
 
-  - `block`: A single content block map (`t:Prosody.block/0`)
-  - `opts`: Analyzer-specific options
+  - `block`: a content block map (`t:Prosody.block/0`)
+  - `opts`: analyzer-specific options
 
   ## Returns
 
   - `{:ok, Prosody.analysis()}` for single content block
   - `{:error, reason}` on failure
-  - `:ignore` if the analyzer does not handle this type of block.
+  - `:ignore` if the analyzer doesn't handle this type of block.
   """
   @callback analyze(block :: Prosody.block(), opts :: keyword()) ::
               {:ok, Prosody.analysis()} | :ignore | {:error, String.t()}
 
   @default_analyzers [Prosody.CodeAnalyzer, Prosody.TextAnalyzer]
 
-  @doc """
-  Analyze content blocks using configured analyzers. Returns `{:ok, result}` or
-  `{:error, reason}`.
-
+  analyzers_common = """
   Supports both single blocks and lists of blocks. For lists, applies analyzers to each
   block and collects the results.
 
   Options:
 
-  - `:analyzers` (default: `:default`): List of analyzer modules that will be tried in
-    order until one doesn't return `:ignore`. The analyzer modules may be provided as
-    either the module itself (where it will be responsible for parsing out its options
-    from the opts passed to `analyze/2` or as `{module, opts}`, where the options for the
-    analyzer are isolated from other options.
+  - `:analyzers` (default: `:default`): a list of analyzer modules tried in order until
+    one doesn't return `:ignore`. Provide analyzer modules as either:
+
+    - the module itself (where it's responsible for parsing out its options from the opts
+      passed to `analyze/2`); or
+    - `{module, opts}` with isolated options provided in advance.
 
     The analyzer module list may include `:default` as the last entry, which expands to
-    `#{inspect(@default_analyzers)}`. If present, `:default` must be the *last* entry,
-    because `Prosody.TextAnalyzer` will analyze any content block as if it were text.
+    `#{inspect(@default_analyzers)}`.
+
+    If present, `:default` must be the _last_ entry. `Prosody.TextAnalyzer` analyzes any
+    content block as if it were text.
+  """
+
+  @doc """
+  Analyze content blocks using configured analyzers. Returns `{:ok, result}` or
+  `{:error, reason}`.
+
+  #{analyzers_common}
 
   ## Examples
 
@@ -70,20 +77,7 @@ defmodule Prosody.Analyzer do
   Analyze content blocks using configured analyzers. Returns the result list or raises an
   error.
 
-  Supports both single blocks and lists of blocks. For lists, applies analyzers to each
-  block and collects the results.
-
-  Options:
-
-  - `:analyzers` (default: `:default`): List of analyzer modules that will be tried in
-    order until one doesn't return `:ignore`. The analyzer modules may be provided as
-    either the module itself (where it will be responsible for parsing out its options
-    from the opts passed to `analyze/2` or as `{module, opts}`, where the options for the
-    analyzer are isolated from other options.
-
-    The analyzer module list may include `:default` as the last entry, which expands to
-    `#{inspect(@default_analyzers)}`. If present, `:default` must be the *last* entry,
-    because `Prosody.TextAnalyzer` will analyze any content block as if it were text.
+  #{analyzers_common}
 
   ## Examples
 

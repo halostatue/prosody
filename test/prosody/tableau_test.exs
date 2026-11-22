@@ -151,7 +151,7 @@ defmodule Prosody.TableauTest do
     end
 
     test "selects the parser from the atom :ext when present" do
-      # The file name has no matching parser, so only :ext can select FailingParser.
+      # The filename has no matching parser, so only :ext can select FailingParser.
       {_post, token} = build_post("test.txt", "Content", ext: :md, parsers: [md: FailingParser])
       assert {:ok, %{posts: [%{prosody: %{error: "parse failed"}}]}} = Extension.pre_build(token)
     end

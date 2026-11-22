@@ -13,7 +13,7 @@ jobs:
   typos:
     if: ${{ github.event.action != 'closed' }}
     name: Typos
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -41,7 +41,7 @@ jobs:
   actionlint:
     if: ${{ github.event.action != 'closed' }}
     name: Actionlint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -66,7 +66,7 @@ jobs:
   credo:
     if: ${{ github.event.action != 'closed' }}
     name: 'Credo'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -103,11 +103,11 @@ jobs:
             deps
             _build
 
-      - run: mix 'do' deps.get, deps.compile
+      - run: mix 'do' deps.get + deps.compile
 
       - uses: reviewdog/action-setup@d8a7baabd7f3e8544ee4dbde3ee41d0011c3a93f # v1.5.0
 
-      - name: 'mix credo --strict | reviewdog'
+      - name: mix credo --strict
         run: |
           mix credo suggest --strict --format=flycheck |
             reviewdog \
@@ -117,3 +117,34 @@ jobs:
               -reporter="github-pr-check" -level="error"
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
+
+  vale:
+    if: ${{ github.event.action != 'closed' }}
+    name: Vale
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+      pull-requests: write # Reviewdog comments on pull requests
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          disable-sudo: true
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
+            objects.githubusercontent.com:443
+            raw.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: vale-cli/vale-action@518a9136acc6e6668ce7c00d367051e0941e87ff # v3.0.0
+        with:
+          glob: '!{deps,_build,doc,.elixir_ls,.elixir-tools,test/support/fixtures}/**'
+          reporter: github-pr-review

@@ -1,27 +1,33 @@
 if Code.ensure_loaded?(MDEx) do
   defmodule Prosody.MDExParser do
     @moduledoc """
-    Markdown content parser for the Prosody content analysis library.
+    Markdown content parser for Prosody.
 
-    This module parses markdown to AST using MDEx and extracts linearized content blocks
-    for accurate analysis that reflects rendered content rather than raw markdown. Code
-    blocks are tagged as `type: :code` so that alternative content analysis is possible.
+    `Prosody.MDExParser` extracts linearized content blocks for analysis reflecting
+    rendered content rather than raw markdown. It tags code blocks with `type: :code` so
+    that alternative content analysis is possible.
     """
 
     @behaviour Prosody.Parser
 
     alias Prosody.Parser
 
+    parser_options = fn name ->
+      """
+      ## Options
+
+      - `:strip_frontmatter` (default: `true`): strip YAML frontmatter or not
+
+      `#{name}/2` ignores all options when the content is a `t:MDEx.Document.t/0` and
+      passes options other than `strip_frontmatter` to MDEx for parsing configuration.
+      """
+    end
+
     @doc """
     Parse Markdown content (from `t:String.t/0` or `t:MDEx.Document.t/0`) into a
     `t:Prosody.block/0` list. Returns `{:ok, blocks}` or `{:error, reason}`.
 
-    ## Options
-
-    Options are ignored when the content is provided as `t:MDEx.Document.t/0`.
-
-    - `:strip_frontmatter` (default: `true`): Whether to strip YAML frontmatter.
-    - Other options are passed to MDEx for parsing configuration, including `:plugins`.
+    #{parser_options.("parse")}
 
     ## Examples
 
@@ -33,7 +39,7 @@ if Code.ensure_loaded?(MDEx) do
       %{type: :text, content: "!", language: nil, metadata: %{}}
     ]}
 
-    iex> Prosody.MDExParser.parse("Text\\n\\n\`\`\`elixir\\ndef hello, do: :ok\\n\`\`\`")
+    iex> Prosody.MDExParser.parse(~S"Text\n\n\`\`\`elixir\ndef hello, do: :ok\n\`\`\`")
     {:ok, [
       %{type: :text, content: "Text", language: nil, metadata: %{}},
       %{type: :code, content: "def hello, do: :ok\\n", language: "elixir", metadata: %{}}
@@ -70,12 +76,7 @@ if Code.ensure_loaded?(MDEx) do
     Parse Markdown content (from `t:String.t/0` or `t:MDEx.Document.t/0`) into
     a `t:Prosody.block/0` list. Returns `blocks` or raises an error.
 
-    ## Options
-
-    Options are ignored when the content is provided as `t:MDEx.Document.t/0`.
-
-    - `:strip_frontmatter` (default: `true`): Whether to strip YAML frontmatter.
-    - Other options are passed to MDEx for parsing configuration, including `:plugins`.
+    #{parser_options.("parse!")}
 
     ## Examples
 
@@ -87,7 +88,7 @@ if Code.ensure_loaded?(MDEx) do
       %{type: :text, content: "!", language: nil, metadata: %{}}
     ]
 
-    iex> Prosody.MDExParser.parse!("Text\\n\\n```elixir\\ndef hello, do: :ok\\n```")
+    iex> Prosody.MDExParser.parse!(~S"Text\n\n```elixir\ndef hello, do: :ok\n```")
     [
       %{type: :text, content: "Text", language: nil, metadata: %{}},
       %{type: :code, content: "def hello, do: :ok\\n", language: "elixir", metadata: %{}}

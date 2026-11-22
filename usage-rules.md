@@ -218,7 +218,7 @@ Analyzes code blocks by tokenizing and estimating cognitive load.
 Features:
 
 - Tokenizes code into identifiers and operators
-- Splits dotted references and camelCase
+- Splits dotted references and `camelCase`
 - Preserves numeric literals
 - Unwraps string literals for content analysis
 - Estimates cognitive load per line

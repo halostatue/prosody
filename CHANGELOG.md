@@ -2,7 +2,7 @@
 
 ## 1.2.0 / 2026-11-22
 
-This change was prepared with the assistance of [Kiro][kiro].
+This change was built with the assistance of [Kiro][kiro].
 
 - Support Tableau 0.31 ([tableau#193][tableau-193]). This changes Tableau from
   having a Converter behaviour to using a converter extension
@@ -16,9 +16,9 @@ This change was prepared with the assistance of [Kiro][kiro].
 - Fixed a bug in `Prosody.Tableau` config parsing. The documentation indicates
   that the configuration `[md: {mod, a: 1}, markdown: {mod, a: 2}]` should
   pass the options to the same module differently based on the extension. It
-  did not, resulting in the last options winning or even being removed
+  didn't, resulting in the last options winning or even being removed
   (`[md: {mod, a: 1}, markdown: mod]` would remove the `a: 1` options for `md`
-  parsing). This has been fixed and the distinct options will be passed
+  parsing). This has been fixed and the distinct options are passed
   appropriately.
 
 - Removed an unnecessary `require Integer` in a test.

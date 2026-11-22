@@ -1,7 +1,8 @@
 defmodule Prosody.Error do
   @moduledoc """
-  Exception that may be raised during Prosody processing. Includes the underlying reason
-  and the phase of execution (`:parse`, `:analyze`, or `:summarize`)
+  Exceptions raised by Prosody.
+
+  Includes the error reason and the phase (`:parse`, `:analyze`, or `:summarize`).
   """
 
   defexception [:phase, :reason]
