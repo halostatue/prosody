@@ -9,3 +9,4 @@
 prosody-*.tar
 erl_crash.dump
 /priv/plts/
+/.config/styles/config/grammars

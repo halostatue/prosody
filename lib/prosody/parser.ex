@@ -9,21 +9,21 @@ defmodule Prosody.Parser do
 
   ## Parameters
 
-  - `content`: The content to parse (type depends on parser implementation)
-  - `opts`: Parser-specific options (keyword list)
+  - `content`: the content to parse (the type depends on parser)
+  - `opts`: parser-specific options (keyword list)
 
   ## Returns
 
-  - `{:ok, blocks}` on success where blocks is a list of content block maps
+  - `{:ok, blocks}` on success where `blocks` is a list of content block maps
   - `{:error, reason}` on failure
 
   ## Common Options
 
-  Parsers should support the following option:
+  All parsers should support the following option:
 
   - `:strip_frontmatter` - Whether to remove YAML frontmatter (default: true)
 
-  Additional options are parser-specific and documented in each implementation.
+  Additional options are parser-specific and documented in the parser.
   """
   @callback parse(content :: term(), opts :: keyword()) :: {:ok, [Prosody.block()]} | {:error, String.t()}
 

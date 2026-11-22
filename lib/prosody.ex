@@ -5,12 +5,12 @@ defmodule Prosody do
 
   The library provides a three-stage processing pipeline:
 
-  1. **Parsing**: Format-specific parsers convert content into interleaved content blocks
-  2. **Analysis**: Block analyzers summarize each content block using configurable
+  1. **Parsing**: format-specific parsers convert content into interleaved content blocks
+  2. **Analysis**: block analyzers summarize each content block using configurable
      algorithms
-  3. **Summarization**: Results are aggregated into final metrics including reading time
+  3. **Summarization**: aggregates results into final metrics including reading time
 
-  Prosody comes with:
+  Prosody includes:
 
   - `Prosody.MDExParser`: a markdown parser based on MDEx
 
@@ -19,20 +19,22 @@ defmodule Prosody do
   - `Prosody.CodeAnalyzer`: a code block analyzer that attempts to apply cognitive load
     adjustments that aren't captured by simple word counting
 
-  - `Prosody.TextAnalyzer`: an implementation that emulates word processor counting
+  - `Prosody.TextAnalyzer`: an text analyzer that emulates word-processor counting
     algorithms based on configuration. There are three short-hand configurations:
 
-    - `:balanced`: The default algorithm, which splits words in a way that matches human
-      intution. Hyphenated words (`fast-paced`) and alternating words (`and/or`) are
-      counted as separate words. Formatted numbers (`1,234`) are counted as single words.
-      This is similar to what Apple Pages does.
+    - `:balanced` (default): splits words in a way that matches human intuition.
+      It counts hyphenated words (`fast-paced`) and alternating words (`and/or`) as
+      separate words, and counts formatted numbers (`1,234`) as single words. Balanced
+      resembles Apple Pages.
 
-    - `:minimal`: This splits words on spaces, so that `fast-paced` and `and/or` are one
-      word, but `and / or` is two words. This is most like Microsoft Word or LibreOffice
+    - `:minimal`: splits words on spaces. It counts `fast-paced` and `and/or` as one word,
+      but counts `and / or` as two words. Minimal resembles Microsoft Word or LibreOffice
       Writer.
 
-    - `:maximal`: This splits words on space and punctuation, resulting in the highest
-      word count.
+    - `:maximal`: splits words on space and punctuation producing the highest word count.
+      It counts hyphenated words (`fast-paced`), alternating words (`and/or`, `and / or`)
+      and formatted numbers (`1,234`) each as separate words. Maximal resembles Google
+      Pages.
 
     The algorithm results are sometimes surprising, but are consistent:
 
@@ -78,11 +80,11 @@ defmodule Prosody do
   @typedoc """
   A content block represents a segment of content with type and metadata.
 
-  - `type`: The content type (`:text` or `:code`)
-  - `content`: The actual content string
-  - `language`: Optional language hint (code block language, if available, or an ISO
-    3166-1 alpha-2 language code)
-  - `metadata`: Parser-specific metadata
+  - `type`: the content type (`:text` or `:code`)
+  - `content`: the actual content string
+  - `language`: optional language hint (code block language or an ISO 3166-1 alpha-2
+    language code)
+  - `metadata`: parser-specific metadata
   """
   @type block :: %{
           type: :text | :code,
@@ -94,10 +96,10 @@ defmodule Prosody do
   @typedoc """
   Analysis result from processing a content block.
 
-  - `words`: Actual word count
-  - `reading_words`: Words adjusted for cognitive load (may differ from `words`)
-  - `lines`: Optional number of lines (relevant for code blocks)
-  - `metadata`: Analyzer-specific metadata
+  - `words`: actual word count
+  - `reading_words`: words adjusted for cognitive load (might differ from `words`)
+  - `lines`: optional number of lines (relevant for code blocks)
+  - `metadata`: analyzer-specific metadata
   """
   @type analysis :: %{
           optional(:lines) => nil | non_neg_integer(),
@@ -109,12 +111,12 @@ defmodule Prosody do
   @typedoc """
   Final summary of content analysis.
 
-  - `words`: Total reading word count (may include cognitive load adjustments), this is
-    `reading_words` from `t:analysis/0`.
-  - `reading_time`: Estimated reading time in minutes
-  - `code`: Code block metrics with `words` and `lines` (nil if no code blocks)
-  - `text`: Text block metrics with `words` (nil if no text blocks)
-  - `metadata`: Summary-specific metadata
+  - `words`: total reading word count, which can include cognitive load adjustments and is
+    `reading_words` from `t:analysis/0`
+  - `reading_time`: estimated reading time in minutes
+  - `code`: code block metrics with `words` and `lines` (nil if there are no code blocks)
+  - `text`: text block metrics with `words` (nil if there are no text blocks)
+  - `metadata`: summary-specific metadata
   """
   @type summary :: %{
           words: non_neg_integer(),
@@ -124,36 +126,42 @@ defmodule Prosody do
           metadata: map()
         }
 
+  analyze_options = ~S"""
+  ## Options
+
+  - `analyzers`: a list of analyzers to run over the blocks
+  """
+
   @doc """
   Analyze content blocks using configured analyzers. Returns `{:ok, result}` or
   `{:error, reason}`.
 
-  ## Options
-
-  - `analyzers`: List of analyzers to run over the blocks
+  #{analyze_options}
   """
   @spec analyze_blocks(block() | [block()], keyword()) :: {:ok, [analysis()]} | {:error, String.t()}
   defdelegate analyze_blocks(blocks, opts \\ []), to: Prosody.Analyzer, as: :analyze
 
   @doc """
-  Analyze content blocks using configured analyzers (bang version). Returns the result or
-  raises an error.
+  Analyze content blocks using configured analyzers. Returns the result or raises an
+  error.
 
-  ## Options
-
-  - `analyzers`: List of analyzers to run over the blocks
+  #{analyze_options}
   """
   @spec analyze_blocks!(block() | [block()], keyword()) :: [analysis()]
   defdelegate analyze_blocks!(blocks, opts \\ []), to: Prosody.Analyzer, as: :analyze!
+
+  summarize_options = ~S"""
+  ## Options
+
+  - `words_per_minute`: reading speed for time calculation (default: 200 wpm)
+  - `min_reading_time`: minimum reading time in minutes (default: 1 minute)
+  """
 
   @doc """
   Summarize analysis results into final metrics. Returns `{:ok, summary}` or
   `{:error, reason}`.
 
-  ## Options
-
-  - `words_per_minute`: Reading speed for time calculation (default: 200)
-  - `min_reading_time`: Minimum reading time in minutes (default: 1)
+  #{summarize_options}
 
   ## Examples
 
@@ -177,10 +185,7 @@ defmodule Prosody do
   @doc """
   Summarize analysis results into final metrics. Returns `summary` or raises an error.
 
-  ## Options
-
-  - `words_per_minute`: Reading speed for time calculation (default: 200)
-  - `min_reading_time`: Minimum reading time in minutes (default: 1)
+  #{summarize_options}
 
   ## Examples
 
@@ -196,16 +201,23 @@ defmodule Prosody do
     end
   end
 
+  parser_options = fn name ->
+    """
+    ## Options
+
+    - `parser` (default `:text`): the content parser, which must be `:markdown`, `:text`,
+    `t:module/0`, or `{parser, opts}`.
+
+    `#{name}/2` passes any other options to the parser specification includes options
+    (`{parser, opts}`).
+    """
+  end
+
   @doc """
   Parse content blocks from content using parser-specific parsers. Returns `{:ok, blocks}`
   or `{:error, reason}`.
 
-  ## Options
-
-  - `parser` (default `:text`): Content parser. Must be `:markdown`, `:text`,
-    `t:module/0`, or `{parser, opts}`.
-  - Other options are passed to the parser unless the parser is provided as
-    `{parser, opts}`
+  #{parser_options.("parse")}
 
   ## Examples
 
@@ -231,12 +243,7 @@ defmodule Prosody do
   Parse content blocks from content using parser-specific parsers. Returns `blocks` or
   raises an error.
 
-  ## Options
-
-  - `parser` (default `:text`): Content parser. Must be `:markdown`, `:text`,
-    `t:module/0`, or `{parser, opts}`.
-  - Other options are passed to the parser unless the parser is provided as
-    `{parser, opts}`
+  #{parser_options.("parse!")}
 
   ## Examples
 
@@ -254,18 +261,24 @@ defmodule Prosody do
     end
   end
 
+  analyze_options = fn name ->
+    """
+    ## Options
+
+    - `parser` (default: `:text`): parser configuration for `parser/2`.
+    - `analyzers`: analyzer configuration for `analyze_blocks/2`.
+    - `words_per_minute`: reading speed for `summarize/2`.
+    - `min_reading_time`: minimum reading time for `summarize/2`.
+
+    `#{name}/2` passes any other options to each pipeline step, except the four noted above.
+    """
+  end
+
   @doc """
   Produces `t:summary/0` output with one function call, returning as `{:ok, summary}` or
   `{:error, reason}`.
 
-  ## Options
-
-  - `parser` (default: `:text`): Parser configuration for `parser/2`.
-  - `analyzers`: Analyzer configuration for `analyze_blocks/2`.
-  - `words_per_minute`: Reading speed for `summarize/2`.
-  - `min_reading_time`: Minimum reading time for `summarize/2`.
-
-  All options are passed to each pipeline step, except for the four noted above.
+  #{analyze_options.("analyze")}
 
   ## Examples
 
@@ -306,14 +319,7 @@ defmodule Prosody do
   @doc """
   Produces `t:summary/0` output with one function call, or raises an error.
 
-  ## Options
-
-  - `parser` (default: `:text`): Parser configuration for `parser/2`.
-  - `analyzers`: Analyzer configuration for `analyze_blocks/2`.
-  - `words_per_minute`: Reading speed for `summarize/2`.
-  - `min_reading_time`: Minimum reading time for `summarize/2`.
-
-  All options are passed to each pipeline step, except for the four noted above.
+  #{analyze_options.("analyze!")}
 
   ## Examples
 

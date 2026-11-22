@@ -74,7 +74,7 @@ jobs:
       - run: mix test
 
   elixir-quality:
-    name: Elixir Qaulity Checks
+    name: Elixir Quality Checks
 
     env:
       LANG: en_US.UTF-8

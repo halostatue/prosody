@@ -1,9 +1,9 @@
 defmodule Prosody.TextAnalyzer do
   @moduledoc """
-  Text content analyzer with support for multiple word counting algorithms emulating
+  Text content analyzer with support for three word counting algorithms emulating
   different word processors.
 
-  This module is the default _fallback_ analyzer, so it will process _any_ content block
+  `Prosody.TextAnalyzer` is the _fallback_ analyzer, so it processes _any_ content block
   type as if it were text.
 
   ## Supported Algorithms
@@ -11,17 +11,18 @@ defmodule Prosody.TextAnalyzer do
   `Prosody.TextAnalyzer` supports three basic algorithms for counting words, each modelled
   after a different word processor. These algorithms are:
 
-  - `:balanced`: The default algorithm, which splits words in a way that matches human
-    intution. Hyphenated words (`fast-paced`) and alternating words (`and/or`) are counted
-    as separate words. Formatted numbers (`1,234`) are counted as single words. This is
-    similar to what Apple Pages does.
+  - `:balanced` (default): splits words in a way that matches human intuition.
+    It counts hyphenated words (`fast-paced`) and alternating words (`and/or`) as
+    separate words, and counts formatted numbers (`1,234`) as single words. Balanced
+    resembles Apple Pages.
 
-  - `:minimal`: This splits words on spaces, so that `fast-paced` and `and/or` are one
-    word, but `and / or` is two words. This is most like Microsoft Word or LibreOffice
+  - `:minimal`: splits words on spaces. It counts `fast-paced` and `and/or` as one word,
+    but counts `and / or` as two words. Minimal resembles Microsoft Word or LibreOffice
     Writer.
 
-  - `:maximal`: This splits words on space and punctuation, resulting in the highest word
-    count.
+  - `:maximal`: splits words on space and punctuation producing the highest word count. It
+    counts hyphenated words (`fast-paced`), alternating words (`and/or`, `and / or`) and
+    formatted numbers (`1,234`) each as separate words. Maximal resembles Google Pages.
 
   The algorithm results are sometimes surprising, but are consistent:
 
@@ -49,34 +50,45 @@ defmodule Prosody.TextAnalyzer do
 
   ## Options
 
-  Behaviour may be changed by providing configuration options to `analyze/2`.
-
-  - `:algorithm`: The counting algorithm to use. If provided, must be one of `:balanced`,
+  - `:algorithm`: the counting algorithm to use. If provided, must be one of `:balanced`,
     `:minimal`, or `:maximal`.
+  - `:preserve_urls`: counts URLs as single words
+  - `:preserve_emails`: counts emails as single words
+  - `:preserve_numbers`: counts numbers as single words
+  - `:skip_punctuation_words`: skips "words" containing only punctuation instead of
+    counting them
+  - `:word_separators`: a list of characters to make a `t:String.pattern/0` or a regular
+    expression describing word separation. Not allowed if `algorithm` is present.
 
-  Explicit feature configuration may be provided with specific options:
+  The different algorithms use different defaults beyond `word_separators`.
 
-  - `:preserve_urls`: Whether to count URLs as single words
-  - `:preserve_emails`: Whether to count emails as single words
-  - `:preserve_numbers`: Whether to count numbers as single words
-  - `:skip_punctuation_words`: Whether "words" that are just punctuation are skipped or
-    counted
-  - `:word_separators`: A list of characters to make a `t:String.pattern/0` or a regular
-    expression indicating how words should be separated. This may not be specified if
-    `algorithm` is specified.
+  - `:balanced` and `minimal`:
 
-  The different algorithms provide different defaults beyond their `word_separators`.
+    ```elixir
+    [
+      preserve_urls: true,
+      preserve_emails: true,
+      preserve_numbers: true,
+      skip_punctuation_words: true
+    ]
+    ```
 
-  - `:balanced` and `minimal` preserve URLs, email addresses, and numbers, and skip
-    punctuation "words".
-  - `:maximal` skips punctuation words but does not preserve URLs, email addresses, or
-    numbers by.
+  - `:maximal`:
 
-  It is permissible to specify `algorithm: :maximal, preserve_urls: true`, where the
-  maximal approach will be taken, but URLs will be counted as a single word.
+    ```elixir
+    [
+      preserve_urls: false,
+      preserve_emails: false,
+      preserve_numbers: false,
+      skip_punctuation_words: true
+    ]
+    ```
 
-  If no `:algorithm` or `:word_separators` are provided, then `algorithm: :balanced` is
-  used.
+  It's permissible to use `algorithm: :maximal, preserve_urls: true`, using the maximal
+  approach and counting URLs as one word.
+
+  Without either `:algorithm` or `:word_separators`, `Prosody.TextAnalyzer` uses
+  `algorithm: :balanced`.
   """
 
   @behaviour Prosody.Analyzer

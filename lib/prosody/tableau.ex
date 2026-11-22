@@ -3,8 +3,7 @@ if Code.ensure_loaded?(Tableau) do
 
   defmodule Prosody.Tableau do
     @moduledoc """
-    A Tableau pre-build extension that uses Prosody to calculate the number of words and
-    the reading time for the content of the post.
+    A Tableau `pre_build` extension using Prosody to produce post statistics.
 
     ## Configuration
 
@@ -19,12 +18,12 @@ if Code.ensure_loaded?(Tableau) do
 
     ### Configuration Options
 
-    - `:enabled` (default `false`): Whether the extension is active
+    - `:enabled` (default `false`): enables the extension
 
-    - `:parsers` (default `:default`): A keyword list of parser configurations, similar to
+    - `:parsers` (default `:default`): a keyword list of parser configurations, similar to
       the `:converters` Tableau site configuration key. The `:default` key is for any
-      posts that do not match the expected configuration. Parsers may be specified as
-      `t:module/0` or `{module, opts}`.
+      posts that don't match the expected configuration. Pass parsers as `t:module/0` or
+      `{module, opts}`.
 
       The special value `:default` (either alone or in the parsers list) sets:
 
@@ -32,30 +31,28 @@ if Code.ensure_loaded?(Tableau) do
         reads the MDEx configuration from Tableau, and
       - `default: Prosody.TextParser` for unknown content types treated as text.
 
-      If no parser is configured as `default: module`, then content not matching any
-      configured type will be skipped.
+      This extension skips any content missing a parser without a default parser
+      (`default: module`)
 
     - Analyzer configurations options:
 
-      - `:analyzers`: The list of analyzers passed to the Prosody block analysis phase, as
-        documented for `Prosody.Analyzer.analyze/2`.
+      - `:analyzers`: the list of analyzers passed to `Prosody.Analyzer.analyze/2`.
 
       - `:algorithm`, `:preserve_urls`, `:preserve_emails`, `:preserve_numbers`,
         `:skip_punctuation_words`, and `:word_separators` are all passed as options to
         `Prosody.TextAnalyzer`, if present.
 
-      See `Prosody.CodeAnalyzer` and `Prosody.TextAnalyzer` for how code analysis is
-      performed.
+      See `Prosody.CodeAnalyzer` and `Prosody.TextAnalyzer` for details.
 
     - Summary configuration options:
 
-      - `:words_per_minute` (default: 200): Reading speed for time estimation
-      - `:min_reading_time` (default: 1): Minimum reading time to display
+      - `:words_per_minute` (default: 200): reading speed for time estimation
+      - `:min_reading_time` (default: 1): minimum reading time to display
 
     ## Post Metadata Added
 
-    The resulting `t:Prosody.summary/0` will be added to the post frontmatter under the
-    key `:prosody`, resulting in an effective frontmatter of:
+    The extension inserts `t:Prosody.summary/0` into to the post frontmatter under the
+     `:prosody` key:
 
     ```yaml
     prosody:
@@ -69,18 +66,18 @@ if Code.ensure_loaded?(Tableau) do
       metadata: {}
     ```
 
-    - `prosody.words`: Total reading word count (may include cognitive load adjustments)
-    - `prosody.reading_time`: Estimated reading time in minutes (rounded up)
-    - `prosody.code`: `nil` if no code is present in the post, otherwise contains `words`
-      (code words where cognitive load adjustments may apply) and `lines` (total non-blank
-      lines of code)
-    - `prosody.text`: `nil` if no text is present in the post, otherwise contains `words`
-      (words found in the text portions of the post)
-    - `prosody.metadata`: Summary-specific metadata. Empty for now.
+    - `prosody.words`: total reading word count (might include cognitive load adjustments)
+    - `prosody.reading_time`: estimated reading time in minutes (rounded up)
+    - `prosody.code`: `nil` if no code is present in the post, otherwise an object with
+      `words` (code words where cognitive load adjustments might apply) and `lines` (total
+      non-blank lines of code)
+    - `prosody.text`: `nil` if no text is present in the post, otherwise an object with
+      `words` (words found in the text portions of the post)
+    - `prosody.metadata`: summary-specific metadata. Empty for now.
 
     ## Opting Out
 
-    Posts can opt out of Prosody calculations by specify `prosody: false` in the post
+    Posts can opt out of Prosody calculations by setting `prosody: false` in the post
     frontmatter:
 
     ```yaml
@@ -114,13 +111,12 @@ if Code.ensure_loaded?(Tableau) do
       end
 
       defp mdex_opts(site) do
-        # elixir-tools/tableau#193 changes Tableau from having a Converter behaviour to
-        # using a converter extension (`Tableau.MDExExtension`). This checks for the
+        # Tableau 0.31 changes Tableau from having a Converter behaviour to using
+        # a converter extension (`Tableau.MDExExtension`). This checks for the
         # configuration there, otherwise it tries to get the configuration from the
         # location _before_ the change.
         #
-        # In the unlikely event that _both_ exist, the newer configuration option take
-        # precedence.
+        # In the unlikely event that _both_ exist, `Tablea.MDExExtension` wins.
         modern = Application.get_env(:tableau, Tableau.MDExExtension, [])
 
         legacy =
@@ -239,8 +235,8 @@ if Code.ensure_loaded?(Tableau) do
 
     @default_parser_opts [strip_frontmatter: false]
 
-    # Parser options are stored with the parser for each extension key so that the same
-    # parser module may be configured differently for different extensions.
+    # Store parser options with the parser for each extension key so that the same parser
+    # module can hold different configurations for different extensions.
     defp prepare_parser({key, {parser, opts}}, parsers),
       do: Map.put(parsers, parser_key(key), {parser, Keyword.merge(@default_parser_opts, opts)})
 

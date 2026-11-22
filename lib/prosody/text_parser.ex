@@ -1,20 +1,26 @@
 defmodule Prosody.TextParser do
   @moduledoc """
-  Plain text content parser for the Prosody content analysis library. This module provides
-  fallback behaviour for plain text content or unknown markup formats.
+  Plain text content parser for Prosody.
+
+  `Prosody.TextParser` provides fallback behaviour for plain text content or unknown
+  markup formats.
   """
 
   @behaviour Prosody.Parser
 
   alias Prosody.Parser
 
+  parse_options = """
+  ## Options
+
+    - `:strip_frontmatter` (default: `true`): strip YAML frontmatter if present
+  """
+
   @doc """
   Parse plain text content (from `t:String.t/0`) into linear `t:Prosody.block/0` entries.
   Returns `{:ok, blocks}` or `{:error, reason}`.
 
-  ## Options
-
-    - `:strip_frontmatter` (default: `true`): Whether to strip YAML frontmatter.
+  #{parse_options}
 
   ## Examples
 
@@ -46,9 +52,7 @@ defmodule Prosody.TextParser do
   Parse plain text content (from `t:String.t/0`) into linear `t:Prosody.block/0` entries.
   Returns `blocks` or raises an error.
 
-  ## Options
-
-    - `:strip_frontmatter` (default: `true`): Whether to strip YAML frontmatter.
+  #{parse_options}
 
   ## Examples
 

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Lint prose with Vale"
+#USAGE arg "[paths]" var=#true default="." help="Files or directories to lint"
+
+vale --glob='!{deps,_build,doc,.elixir_ls,.elixir-tools,test/support/fixtures}/**' "${@:-.}"
