@@ -69,25 +69,66 @@ jobs:
             deps
             _build
 
-      - run: mix 'do' deps.get, deps.compile
+      - run: mix deps.get
+
+      - run: mix test
+
+  elixir-quality:
+    name: Elixir Qaulity Checks
+
+    env:
+      LANG: en_US.UTF-8
+      LC_CTYPE: en_US.UTF-8
+
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            builds.hex.pm:443
+            coveralls.io:443
+            github.com:443
+            release-assets.githubusercontent.com:443
+            repo.hex.pm:443
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        id: install
+        with:
+          otp-version: '29'
+          elixir-version: '1.20'
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: builds@elixir-${{ steps.install.outputs.elixir-version }}-otp-${{ steps.install.outputs.otp-version }}-mix-${{ hashFiles('mix.lock') }}
+          path: |
+            deps
+            _build
+
+      - run: mix deps.get
 
       - run: mix hex.audit
 
       - run: mix sobelow --config --format github
 
       - run: mix format --check-formatted
-        if: matrix.quality
 
       - run: mix compile --warnings-as-errors
-        if: matrix.quality
 
       - run: mix coveralls.github
-        if: ${{ matrix.quality }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
       - run: mix credo --strict
-        if: matrix.quality
 
       - run: mix usage_rules.validate usage-rules.md
 
@@ -100,4 +141,3 @@ jobs:
             plts@elixir-${{ steps.install.outputs.elixir-version }}-otp-${{ steps.install.outputs.otp-version }}-mix-
 
       - run: mix dialyzer --format github
-        if: matrix.quality
