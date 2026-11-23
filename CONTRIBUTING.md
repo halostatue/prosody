@@ -98,7 +98,7 @@ Austin Ziegler created Prosody.
 [conventional]: https://www.conventionalcommits.org/en/v1.0.0/
 [credo]: https://github.com/rrrene/credo
 [dco]: licences/dco.txt
-[exunit]: https://hexdocs.pm/ex_unit/ExUnit.html
+[exunit]: https://ex-unit.hexdocs.pm/ExUnit.html
 [issues]: https://github.com/halostatue/prosody/issues
 [quokka]: https://github.com/emkguts/quokka
 [tpope-qcm]: https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html

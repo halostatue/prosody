@@ -29,4 +29,4 @@ after the release of a new version of Elixir.
 Create a [private vulnerability report][advisory] with GitHub.
 
 [advisory]: https://github.com/halostatue/prosody/security/advisories/new
-[otp-versions]: https://hexdocs.pm/elixir/compatibility-and-deprecations.html#between-elixir-and-erlang-otp
+[otp-versions]: https://elixir.hexdocs.pm/compatibility-and-deprecations.html#between-elixir-and-erlang-otp

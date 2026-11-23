@@ -21,7 +21,9 @@ defmodule Prosody.TableauMDExConfigTest do
     Application.put_env(:tableau, Tableau.MDExExtension, extension: [strikethrough: true])
 
     assert {:ok, [%{content: "Test"}, %{content: "Content"}]} = MDExParser.parse(@content)
-    assert {:ok, [%{content: "Test"}, %{content: "Content"}]} = MDExParser.parse(@content, site: %{})
+
+    assert {:ok, [%{content: "Test"}, %{content: "Content"}]} =
+             MDExParser.parse(@content, site: %{})
   end
 
   test "Tableau.MDExExtension config takes precedence over legacy site markdown config" do

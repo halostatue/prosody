@@ -13,11 +13,7 @@ defmodule Prosody.TableauTest do
   defmodule OptsEchoParser do
     @moduledoc false
     def parse(_, opts),
-      do:
-        {:error,
-         opts
-         |> Keyword.drop([:site, :strip_frontmatter])
-         |> inspect()}
+      do: {:error, opts |> Keyword.drop([:site, :strip_frontmatter]) |> inspect()}
   end
 
   describe "config/1" do
@@ -38,9 +34,15 @@ defmodule Prosody.TableauTest do
     end
 
     test "handles algorithm configuration with validation" do
-      assert {:ok, %{analysis_opts: [algorithm: :balanced]}} = Extension.config(%{algorithm: :balanced})
-      assert {:ok, %{analysis_opts: [algorithm: :minimal]}} = Extension.config(%{algorithm: :minimal})
-      assert {:ok, %{analysis_opts: [algorithm: :maximal]}} = Extension.config(%{algorithm: :maximal})
+      assert {:ok, %{analysis_opts: [algorithm: :balanced]}} =
+               Extension.config(%{algorithm: :balanced})
+
+      assert {:ok, %{analysis_opts: [algorithm: :minimal]}} =
+               Extension.config(%{algorithm: :minimal})
+
+      assert {:ok, %{analysis_opts: [algorithm: :maximal]}} =
+               Extension.config(%{algorithm: :maximal})
+
       assert {:error, message} = Extension.config(%{algorithm: :invalid})
       assert message =~ "invalid :algorithm value"
     end
@@ -57,15 +59,23 @@ defmodule Prosody.TableauTest do
     end
 
     test "handles word separators with validation" do
-      assert {:ok, %{analysis_opts: [word_separators: %Regex{}]}} = Extension.config(%{word_separators: ~r/\s+/})
-      assert {:ok, %{analysis_opts: [word_separators: %Regex{}]}} = Extension.config(%{word_separators: "\\s+"})
-      assert {:ok, %{analysis_opts: [word_separators: {:ac, _}]}} = Extension.config(%{word_separators: [" ", "\t"]})
+      assert {:ok, %{analysis_opts: [word_separators: %Regex{}]}} =
+               Extension.config(%{word_separators: ~r/\s+/})
+
+      assert {:ok, %{analysis_opts: [word_separators: %Regex{}]}} =
+               Extension.config(%{word_separators: "\\s+"})
+
+      assert {:ok, %{analysis_opts: [word_separators: {:ac, _}]}} =
+               Extension.config(%{word_separators: [" ", "\t"]})
+
       assert {:error, message} = Extension.config(%{word_separators: 123})
       assert message =~ "invalid word separators"
     end
 
     test "handles words per minute with validation" do
-      assert {:ok, %{summarize_opts: [words_per_minute: 250]}} = Extension.config(%{words_per_minute: 250})
+      assert {:ok, %{summarize_opts: [words_per_minute: 250]}} =
+               Extension.config(%{words_per_minute: 250})
+
       assert {:error, message} = Extension.config(%{words_per_minute: 0})
       assert message =~ "invalid :words_per_minute value"
 
@@ -74,8 +84,12 @@ defmodule Prosody.TableauTest do
     end
 
     test "handles min reading time with validation" do
-      assert {:ok, %{summarize_opts: [min_reading_time: 1]}} = Extension.config(%{min_reading_time: 1})
-      assert {:ok, %{summarize_opts: [min_reading_time: 0]}} = Extension.config(%{min_reading_time: 0})
+      assert {:ok, %{summarize_opts: [min_reading_time: 1]}} =
+               Extension.config(%{min_reading_time: 1})
+
+      assert {:ok, %{summarize_opts: [min_reading_time: 0]}} =
+               Extension.config(%{min_reading_time: 0})
+
       assert {:error, message} = Extension.config(%{min_reading_time: -1})
       assert message =~ "invalid :min_reading_time value"
     end
@@ -88,7 +102,9 @@ defmodule Prosody.TableauTest do
                   ".json" => {AnotherParser, [strip_frontmatter: false]}
                 }
               }} =
-               Extension.config(%{parsers: [txt: {CustomParser, custom_opt: true}, json: AnotherParser]})
+               Extension.config(%{
+                 parsers: [txt: {CustomParser, custom_opt: true}, json: AnotherParser]
+               })
     end
 
     test "keeps separate options when one parser handles multiple extensions" do
@@ -99,7 +115,9 @@ defmodule Prosody.TableauTest do
                   ".markdown" => {CustomParser, [strip_frontmatter: false, b: 2]}
                 }
               }} =
-               Extension.config(%{parsers: [md: {CustomParser, a: 1}, markdown: {CustomParser, b: 2}]})
+               Extension.config(%{
+                 parsers: [md: {CustomParser, a: 1}, markdown: {CustomParser, b: 2}]
+               })
 
       assert {:ok,
               %{
@@ -107,7 +125,8 @@ defmodule Prosody.TableauTest do
                   ".md" => {CustomParser, [strip_frontmatter: false, a: 1]},
                   ".markdown" => {CustomParser, [strip_frontmatter: false]}
                 }
-              }} = Extension.config(%{parsers: [md: {CustomParser, a: 1}, markdown: CustomParser]})
+              }} =
+               Extension.config(%{parsers: [md: {CustomParser, a: 1}, markdown: CustomParser]})
     end
 
     test "does not double the leading dot of string extension keys" do
@@ -118,7 +137,9 @@ defmodule Prosody.TableauTest do
     end
 
     test "handles analyzers option with validation" do
-      assert {:ok, %{analysis_opts: [analyzers: [:text, :code]]}} = Extension.config(%{analyzers: [:text, :code]})
+      assert {:ok, %{analysis_opts: [analyzers: [:text, :code]]}} =
+               Extension.config(%{analyzers: [:text, :code]})
+
       assert {:error, error} = Extension.config(%{analyzers: "invalid"})
       assert error =~ "Invalid `:analyzers` option"
     end
@@ -170,11 +191,15 @@ defmodule Prosody.TableauTest do
 
     test "falls back to the default parser when :ext has no match" do
       {%{body: body}, token} = build_post("test.md", "Content", ext: :unknown)
-      assert {:ok, %{posts: [%{body: ^body, prosody: %{reading_time: _}}]}} = Extension.pre_build(token)
+
+      assert {:ok, %{posts: [%{body: ^body, prosody: %{reading_time: _}}]}} =
+               Extension.pre_build(token)
     end
 
     test "skips posts with an unmatched :ext and no default parser" do
-      {post, token} = build_post("test.md", "Content", ext: :unknown, parsers: [txt: FailingParser])
+      {post, token} =
+        build_post("test.md", "Content", ext: :unknown, parsers: [txt: FailingParser])
+
       assert {:ok, %{posts: [^post]}} = Extension.pre_build(token)
     end
 
@@ -201,7 +226,8 @@ defmodule Prosody.TableauTest do
     @site_strikethrough %{markdown: [mdex: [extension: [strikethrough: true]]]}
 
     test "parses markdown content" do
-      assert {:ok, [%{content: "Test"}, %{content: "~~Content~~"}]} = Extension.MDExParser.parse(@content)
+      assert {:ok, [%{content: "Test"}, %{content: "~~Content~~"}]} =
+               Extension.MDExParser.parse(@content)
     end
 
     test "uses legacy site markdown config when provided" do
@@ -213,12 +239,16 @@ defmodule Prosody.TableauTest do
     end
 
     test "handles missing site config" do
-      assert {:ok, [%{content: "Test"}, %{content: "~~Content~~"}]} = Extension.MDExParser.parse(@content, [])
+      assert {:ok, [%{content: "Test"}, %{content: "~~Content~~"}]} =
+               Extension.MDExParser.parse(@content, [])
     end
 
     test "merges site config with opts" do
       assert {:ok, [%{content: "Test"}, %{content: "Content"}]} =
-               Extension.MDExParser.parse(@content, site: @site_strikethrough, strip_frontmatter: true)
+               Extension.MDExParser.parse(@content,
+                 site: @site_strikethrough,
+                 strip_frontmatter: true
+               )
     end
   end
 

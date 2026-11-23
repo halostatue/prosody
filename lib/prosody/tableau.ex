@@ -210,12 +210,15 @@ if Code.ensure_loaded?(Tableau) do
                 :preserve_numbers,
                 :skip_punctuation_words,
                 :word_separators
-              ], do: {:cont, %{config | analysis_opts: Keyword.put(config.analysis_opts, key, value)}}
+              ] do
+      {:cont, %{config | analysis_opts: Keyword.put(config.analysis_opts, key, value)}}
+    end
 
     defp prepare_option({key, value}, config) when key in [:words_per_minute, :min_reading_time],
       do: {:cont, %{config | summarize_opts: Keyword.put(config.summarize_opts, key, value)}}
 
-    defp prepare_option({key, _value}, _config), do: {:halt, {:error, "Unknown configuration option #{key}"}}
+    defp prepare_option({key, _value}, _config),
+      do: {:halt, {:error, "Unknown configuration option #{key}"}}
 
     defp prepare_parsers(config, parsers) do
       requested = List.wrap(parsers)
@@ -240,7 +243,8 @@ if Code.ensure_loaded?(Tableau) do
     defp prepare_parser({key, {parser, opts}}, parsers),
       do: Map.put(parsers, parser_key(key), {parser, Keyword.merge(@default_parser_opts, opts)})
 
-    defp prepare_parser({key, parser}, parsers), do: Map.put(parsers, parser_key(key), {parser, @default_parser_opts})
+    defp prepare_parser({key, parser}, parsers),
+      do: Map.put(parsers, parser_key(key), {parser, @default_parser_opts})
 
     defp parser_key(:default), do: :default
     defp parser_key("." <> _ = key), do: key
@@ -276,8 +280,10 @@ if Code.ensure_loaded?(Tableau) do
 
     defp validate_algorithm(value) when value in [nil, :balanced, :maximal, :minimal], do: :ok
 
-    defp validate_algorithm(value),
-      do: {:error, "invalid :algorithm value #{inspect(value)}, expected :minimal, :balanced, or :maximal"}
+    defp validate_algorithm(value) do
+      {:error,
+       "invalid :algorithm value #{inspect(value)}, expected :minimal, :balanced, or :maximal"}
+    end
 
     defp validate_boolean(value, _key) when value in [nil, true, false], do: :ok
     defp validate_boolean(_value, key), do: {:error, "invalid boolean :#{key} value"}
@@ -302,13 +308,15 @@ if Code.ensure_loaded?(Tableau) do
       end
     end
 
-    defp validate_words_per_minute(value) when is_nil(value) or (is_integer(value) and value > 0), do: :ok
+    defp validate_words_per_minute(value) when is_nil(value) or (is_integer(value) and value > 0),
+      do: :ok
 
     defp validate_words_per_minute(other) do
       {:error, "invalid :words_per_minute value #{inspect(other)}, expected positive integer"}
     end
 
-    defp validate_min_reading_time(value) when is_nil(value) or (is_integer(value) and value >= 0), do: :ok
+    defp validate_min_reading_time(value)
+         when is_nil(value) or (is_integer(value) and value >= 0), do: :ok
 
     defp validate_min_reading_time(other) do
       {:error, "invalid :min_reading_time value #{inspect(other)}, expected non-negative integer"}

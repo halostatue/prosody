@@ -406,7 +406,7 @@ Passed to `Prosody.parse/2`:
 ## Resources
 
 - **[Hex Package](https://hex.pm/packages/prosody)** - Package on Hex.pm
-- **[HexDocs](https://hexdocs.pm/prosody)** - Complete API documentation
+- **[HexDocs](https://prosody.hexdocs.pm/)** - Complete API documentation
 - **[GitHub Repository](https://github.com/halostatue/prosody)** - Source code
 - **[Tableau](https://hex.pm/packages/tableau)** - Static site generator
 - **[MDEx](https://hex.pm/packages/mdex)** - Markdown parser

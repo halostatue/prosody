@@ -39,8 +39,8 @@ Prosody documentation is found on [HexDocs][docs].
 
 Prosody follows [Semantic Versioning 2.0][semver].
 
-[docs]: https://hexdocs.pm/prosody
+[docs]: https://prosody.hexdocs.pm/
 [mdex]: https://hex.pm/packages/mdex
-[posts]: https://hexdocs.pm/tableau/Tableau.PostExtension.html
+[posts]: https://tableau.hexdocs.pm/Tableau.PostExtension.html
 [semver]: https://semver.org/
 [tableau]: https://hex.pm/packages/tableau

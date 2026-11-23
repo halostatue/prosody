@@ -123,10 +123,17 @@ defmodule Prosody.TextAnalyzer do
     {word_separators, opts} = Keyword.pop(opts, :word_separators)
 
     case {algorithm, word_separators} do
-      {nil, nil} -> resolve_algorithm(:balanced, opts)
-      {value, nil} when value in [:minimal, :balanced, :maximal] -> resolve_algorithm(value, opts)
-      {nil, word_separators} -> {:ok, Map.merge(Map.new(opts), %{word_separators: word_separators, algorithm: :manual})}
-      {_, _} -> {:error, "Cannot provide `:algorithm` and `:word_separators`"}
+      {nil, nil} ->
+        resolve_algorithm(:balanced, opts)
+
+      {value, nil} when value in [:minimal, :balanced, :maximal] ->
+        resolve_algorithm(value, opts)
+
+      {nil, word_separators} ->
+        {:ok, Map.merge(Map.new(opts), %{word_separators: word_separators, algorithm: :manual})}
+
+      {_, _} ->
+        {:error, "Cannot provide `:algorithm` and `:word_separators`"}
     end
   end
 

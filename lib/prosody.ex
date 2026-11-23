@@ -138,7 +138,8 @@ defmodule Prosody do
 
   #{analyze_options}
   """
-  @spec analyze_blocks(block() | [block()], keyword()) :: {:ok, [analysis()]} | {:error, String.t()}
+  @spec analyze_blocks(block() | [block()], keyword()) ::
+          {:ok, [analysis()]} | {:error, String.t()}
   defdelegate analyze_blocks(blocks, opts \\ []), to: Prosody.Analyzer, as: :analyze
 
   @doc """
@@ -348,7 +349,11 @@ defmodule Prosody do
 
   defp aggregate_analysis(analysis, words_per_minute, min_reading_time) do
     aggregate =
-      Enum.reduce(analysis, %{text_words: 0, reading_words: 0, code_words: 0, code_lines: 0}, &aggregate_analysis/2)
+      Enum.reduce(
+        analysis,
+        %{text_words: 0, reading_words: 0, code_words: 0, code_lines: 0},
+        &aggregate_analysis/2
+      )
 
     reading_time =
       if aggregate.reading_words > 0 do
@@ -405,7 +410,8 @@ defmodule Prosody do
   defp resolve_parser(module) when is_atom(module), do: module
   defp resolve_parser({module, opts}), do: {resolve_parser(module), opts}
 
-  defp validate_words_per_minute(words_per_minute) when is_integer(words_per_minute) and words_per_minute > 0 do
+  defp validate_words_per_minute(words_per_minute)
+       when is_integer(words_per_minute) and words_per_minute > 0 do
     :ok
   end
 
@@ -413,7 +419,8 @@ defmodule Prosody do
     {:error, "invalid :words_per_minute value #{inspect(other)}, expected positive integer"}
   end
 
-  defp validate_min_reading_time(min_reading_time) when is_integer(min_reading_time) and min_reading_time >= 0 do
+  defp validate_min_reading_time(min_reading_time)
+       when is_integer(min_reading_time) and min_reading_time >= 0 do
     :ok
   end
 

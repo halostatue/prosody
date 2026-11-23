@@ -110,14 +110,24 @@ if Code.ensure_loaded?(MDEx) do
     defp walk_ast(%MDEx.Document{nodes: nodes}, opts), do: walk_ast(nodes, [], opts)
 
     defp walk_ast([], acc, _opts), do: acc
-    defp walk_ast([node | rest], acc, opts), do: walk_ast(rest, process_node(node, acc, opts), opts)
+
+    defp walk_ast([node | rest], acc, opts),
+      do: walk_ast(rest, process_node(node, acc, opts), opts)
 
     defp process_node(%mod{literal: content}, acc, opts) when mod in [MDEx.Text, MDEx.Code] do
       [create_text_block(content, opts[:language]) | acc]
     end
 
     defp process_node(%mod{nodes: children}, acc, opts)
-         when mod in [MDEx.Emph, MDEx.Heading, MDEx.Link, MDEx.Strong, MDEx.Table, MDEx.TableCell, MDEx.TableRow] do
+         when mod in [
+                MDEx.Emph,
+                MDEx.Heading,
+                MDEx.Link,
+                MDEx.Strong,
+                MDEx.Table,
+                MDEx.TableCell,
+                MDEx.TableRow
+              ] do
       walk_ast(children, [], opts) ++ acc
     end
 
