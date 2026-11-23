@@ -45,7 +45,8 @@ defmodule Prosody.TextParser do
         content
       end
 
-    {:ok, [%{type: :text, content: content, language: Keyword.get(opts, :language), metadata: %{}}]}
+    {:ok,
+     [%{type: :text, content: content, language: Keyword.get(opts, :language), metadata: %{}}]}
   end
 
   @doc """

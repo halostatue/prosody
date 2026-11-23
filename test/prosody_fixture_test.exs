@@ -6,7 +6,11 @@ defmodule Prosody.FixtureTests do
   @text_fixtures %{
     "en" => %{
       "a_modest_proposal.md" => %{minimal: 3400, maximal: 3431, balanced: 3410},
-      "alices_adventures_in_wonderland.md" => %{minimal: 26_382, maximal: 26_711, balanced: 26_525},
+      "alices_adventures_in_wonderland.md" => %{
+        minimal: 26_382,
+        maximal: 26_711,
+        balanced: 26_525
+      },
       "frankenstein.md" => %{minimal: 74_959, maximal: 75_206, balanced: 75_081},
       "the_adventure_of_the_three_students.md" => %{minimal: 6485, maximal: 6566, balanced: 6541},
       "the_black_cat.md" => %{minimal: 3875, maximal: 3985, balanced: 3963},
@@ -16,13 +20,20 @@ defmodule Prosody.FixtureTests do
   }
 
   describe "text fixture analysis" do
-    for {language, fixtures} <- @text_fixtures, {fixture, variants} <- fixtures, {algorithm, expected} <- variants do
+    for {language, fixtures} <- @text_fixtures,
+        {fixture, variants} <- fixtures,
+        {algorithm, expected} <- variants do
       content = File.read!(Path.join([@fixtures_dir, language, fixture]))
 
       test "#{language}/#{fixture} with algorithm #{inspect(algorithm)}" do
         assert {:ok, result} =
                  Prosody.TextAnalyzer.analyze(
-                   %{type: :text, content: unquote(content), language: unquote(language), metadata: %{}},
+                   %{
+                     type: :text,
+                     content: unquote(content),
+                     language: unquote(language),
+                     metadata: %{}
+                   },
                    algorithm: unquote(algorithm),
                    debug: true
                  )

@@ -25,7 +25,8 @@ defmodule Prosody.Parser do
 
   Additional options are parser-specific and documented in the parser.
   """
-  @callback parse(content :: term(), opts :: keyword()) :: {:ok, [Prosody.block()]} | {:error, String.t()}
+  @callback parse(content :: term(), opts :: keyword()) ::
+              {:ok, [Prosody.block()]} | {:error, String.t()}
 
   @doc """
   Strips frontmatter from binary content in a uniform way. Only works for YAML frontmatter

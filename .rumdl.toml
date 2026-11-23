@@ -1,0 +1,6 @@
+# Global configuration options
+[global]
+exclude = [".git", ".github", "deps", "_build", "test/support/fixtures/en"]
+
+respect-gitignore = true
+flavor = "gfm"
